@@ -1,0 +1,97 @@
+Next Steps (Production-Ready Roadmap)
+(🔒 1. Implement Authentication (Supabase)
+Use Supabase auth to manage user sessions (email/password login + register).
+
+ Set up Supabase project & copy your API keys
+
+ Configure /lib/supabase/client.ts
+
+ Create AuthProvider (handle session state globally)
+
+ Build login/register forms using Tailwind
+
+ Protect routes like /checkout, /profile) = Done
+
+🛍 2. Create Product Data Schema
+In Supabase (PostgreSQL), create tables:
+
+products (id, name, price, image, slug, category, description, stock)
+
+categories (optional)
+
+orders, order_items (for later)
+
+Then:
+
+ Add some sample products
+
+ Create product.service.ts to fetch from Supabase
+
+ Use useProducts() hook to show products on /shop
+
+🛒 3. Implement Cart Functionality
+Using Context + Reducer pattern:
+
+ Create CartContext.tsx
+
+ Add cartReducer.ts, cartUtils.ts
+
+ Show cart items in /cart page
+
+ Add-to-cart button on ProductCard.tsx
+
+ Quantity change, remove item, subtotal calculation
+
+💳 4. Integrate Checkout (Stripe)
+Use Stripe for payments:
+
+ Create /lib/stripe/stripe.ts
+
+ Add Stripe SDK and secret keys
+
+ Add backend API route for checkout session
+
+ Redirect to Stripe checkout on click
+
+📦 5. Product Detail Page
+ Dynamic route /product/[id]/page.tsx
+
+ Fetch product details using Supabase query
+
+ Display gallery, description, pricing
+
+ Add-to-cart button
+
+🧑‍💼 6. User Profile Page
+ Show past orders (mock first)
+
+ Show shipping info
+
+ Allow user to update profile (optional)
+
+🧪 7. Testing & Validation
+ Form validations with react-hook-form or zod
+
+ Unit tests (optional): Jest, React Testing Library
+
+ Lighthouse performance check
+
+ Mobile responsiveness
+
+🚀 8. Deploy to Vercel
+ Push to GitHub
+
+ Connect repo to Vercel
+
+ Add .env variables in Vercel dashboard
+
+ Enable CI/CD (auto-deploy on push)
+
+🧭 Suggested Order:
+Auth
+
+Product listings
+
+Product detail
+
+Cart
