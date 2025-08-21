@@ -1,0 +1,69 @@
+/* Global Styles */ 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* === Custom Global Styles (Optional but Recommended) === */
+
+:root {
+  --color-gold: #FFD700;
+  --color-black: #000000;
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: #ffffff;
+  color: #000000;
+  scroll-behavior: smooth;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.border-gold {
+  border-color: var(--color-gold);
+}
+.bg-gold {
+  background-color: var(--color-gold);
+}
+.text-gold {
+  color: var(--color-gold);
+}
+
+#nprogress .bar {
+  background: var(--color-gold) !important;
+  height: 3px !important;
+}
+
+#nprogress .peg {
+  box-shadow: 0 0 10px var(--color-gold), 0 0 5px var(--color-gold);
+}
+
+#nprogress .spinner-icon {
+  display: none; /* Hide spinner, keep bar only */
+}
+
+
+/* === Reusable Utilities === */
+.btn {
+  @apply inline-block px-6 py-3 rounded-md font-semibold transition;
+}
+
+.btn-primary {
+  @apply bg-gold text-black hover:bg-yellow-400;
+}
+
+.btn-secondary {
+  @apply bg-black text-gold border border-gold hover:bg-gray-900;
+}
