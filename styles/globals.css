@@ -54,6 +54,50 @@ a {
   display: none; /* Hide spinner, keep bar only */
 }
 
+/* Gold-themed slider styling */
+.slider-thumb-gold::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  background: var(--color-gold, #d4af37); /* fallback gold */
+  border: 2px solid white;
+  cursor: pointer;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+  margin-top: -6px;
+  position: relative;
+  z-index: 10;
+}
+
+.slider-thumb-gold::-moz-range-thumb {
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  background: var(--color-gold, #d4af37);
+  border: 2px solid white;
+  cursor: pointer;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 10;
+}
+
+.slider-thumb-gold::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    #e5e5e5,
+    #e5e5e5
+  );
+}
+
+.slider-thumb-gold::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: #e5e5e5;
+}
+
+
 
 /* === Reusable Utilities === */
 .btn {

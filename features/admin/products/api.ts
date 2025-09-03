@@ -1,6 +1,5 @@
 import { getBrowserSupabaseClient } from "@/lib/supabase/browser";
-import type { Product, Category } from "./types";
-
+import type { Product, Category, fetchProductsFiltersArgs } from "./types";
 
 const supabase = getBrowserSupabaseClient();
 const BUCKET = 'product-images';
@@ -43,6 +42,33 @@ Promise<{products: Product[]; nextPage: number | null}> {
     }
 }
 
+export async function fetchProductsWithFiletering(
+    {pageParam = 0, category, priceRange, limit=PAGE_SIZE}: fetchProductsFiltersArgs) 
+{
+    let query = supabase
+        .from("products")
+        .select("id, name, description, image_url, price")
+        .order("created_at", {ascending: false})
+        .range(pageParam * limit, pageParam * limit + (limit - 1));
+    
+    if (category) {
+        query = query.eq("category_id", category);
+    }
+
+    if (priceRange) {
+        query = query.gte("price", priceRange[0]).lte("price", priceRange[1]);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    return {
+        products: data as Product[],
+        nextPage: data.length === limit ? pageParam + 1: null,
+    }
+    
+}
+
 export async function uploadProductImage(file:File) {
     const ext = file.name.split('.').pop();
     const path = `admin/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
@@ -51,7 +77,7 @@ export async function uploadProductImage(file:File) {
         cacheControl: '3600',
         upsert: false
     });
-    if(error) throw error;
+    if(error) {throw error.message};
     const {data: publicData} = supabase.storage.from(BUCKET).getPublicUrl(data.path);
     return {
         publicUrl: publicData.publicUrl,
@@ -60,14 +86,14 @@ export async function uploadProductImage(file:File) {
 }
 
 export async function createProduct(input:Product, image_file?: File | null): Promise<Product> {
-    let image_url: string  | null = null;
+    let image_url: string  | null = 'https://via.placeholder.com/400'; // default;
     let image_path: string | null = null;
 
     if(image_file && image_file.size){
         const uploadImage = await uploadProductImage(image_file);
         image_url = uploadImage.publicUrl;
         image_path = uploadImage.path;
-    };
+    }
 
     const { data, error } = await supabase
         .from('products')
@@ -136,3 +162,24 @@ export async function deleteProduct(id:string) {
         }
     }
 }
+
+/*export async function getServerCategoryOptions() {
+  const { data, error } = await supabaseServer
+    .from("categories")
+    .select("id, name")
+    .order("name");
+
+  if (error) throw error;
+  return data;
+}
+
+export async function getServerProducts(limit = 12) {
+  const { data, error } = await supabaseServer
+    .from("products")
+    .select("id, name, description, category_id, image_url, price, stock_quantity, created_at")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return data;
+} */

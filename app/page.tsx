@@ -1,7 +1,12 @@
 import Link from 'next/link'
-import { ProductCard } from '@/components/ui/ProductCard'
+import ProductCard from '@/components/ui/ProductCard'
+import { getServerProducts } from '@/features/product/productService';
+import { Product } from '@/features/admin/products/types';
 
-export default function HomePage() {
+export default async function HomePage() {
+  //Prefetch the first page of products for Featured Product based on latest 
+  const initialProducts = await getServerProducts(4);
+
   return (
     <main className="max-w-7xl mx-auto">
       {/* ✅ Hero Section */}
@@ -37,8 +42,8 @@ export default function HomePage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {Array.from({ length: 4 }).map((_, idx) => (
-            <ProductCard key={idx} />
+          {initialProducts.map((p) => (
+            <ProductCard product={p} />
           ))}
         </div>
       </section>

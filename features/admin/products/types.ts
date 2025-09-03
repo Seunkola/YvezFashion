@@ -19,7 +19,7 @@ export type Product = {
     stock_quantity: number,
     category_id: string,
     image_url: string
-    image_path: string
+    image_path?: string
 }
 
 export type ProductsInfiniteData = {
@@ -29,3 +29,10 @@ export type ProductsInfiniteData = {
   }[];
   pageParams: unknown[];
 };
+
+export type fetchProductsFiltersArgs = {
+  pageParam?: number;
+  category?: string | null;
+  priceRange?: [number,number] | null;
+  limit?: number;
+}

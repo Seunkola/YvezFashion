@@ -1,8 +1,8 @@
 'use client';
 
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createProduct, fetchProducts, updateProduct, deleteProduct } from "./api";
-import { Product, ProductsInfiniteData } from "./types";
+import { createProduct, fetchProducts, updateProduct, deleteProduct, fetchProductsWithFiletering } from "./api";
+import { fetchProductsFiltersArgs, Product, ProductsInfiniteData } from "./types";
 import toast from "react-hot-toast";
 
 //fetch products from api using infinite scroll fetch
@@ -16,27 +16,35 @@ export function useProducts(){
     });
 }
 
+export function useProductsWithFilters(filters?: Omit<fetchProductsFiltersArgs, "pageParam">) {
+    return useInfiniteQuery({
+        queryKey: ['products', filters],
+        queryFn: ({pageParam = 0}) => fetchProductsWithFiletering({pageParam, ...filters}),
+        getNextPageParam:(lastPage) => lastPage.nextPage,
+        initialPageParam: 0,
+        staleTime: 1000 * 60 //1 minute
+    });
+}
+
 // create product with optimistic update
 export function useCreateProducts() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: createProduct,
-        onMutate: async (payload) => {
+        mutationFn: async ({product, image_file}: {product: Product; image_file?: File | null}) => {
+            return createProduct(product, image_file);
+        },
+        onMutate: async ({product}) => {
             await queryClient.cancelQueries({queryKey:['products']});
 
             //snapshot of previous product
-            const previousProduct = queryClient.getQueryData<Product[]>(['products']) || [];
+            const previousProduct = queryClient.getQueryData<ProductsInfiniteData>(['products']) || [];
 
             const optimistic: Product = {
+                ...product,
                 id: 'optimistic-' + Date.now(),
-                name: payload.name,
-                description: payload.description,
-                price: payload.price,
-                stock_quantity: payload.stock_quantity,
-                category_id: payload.category_id,
-                image_path: payload.image_path || "",
-                image_url: payload.image_url || ""
+                image_path: product.image_path || "",
+                image_url: product.image_url || ""
             }
 
             // update cache optimistically
@@ -78,7 +86,7 @@ export function useUpdateProduct() {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: (
-            { id, patch, image_file }: { id: string, patch: Product, image_file: File | null }
+            { id, patch, image_file }: { id: string, patch: Partial<Product>, image_file: File | null }
         ) => updateProduct(id,patch,image_file),
         onSuccess: () => {
             toast.success('✅ Product updated');
@@ -95,7 +103,7 @@ export function useDeleteProduct() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: deleteProduct,
+        mutationFn: ({id}: {id:string}) => deleteProduct(id),
         onError:(error, variables, context) => {
             toast.error("❌ Delete failed");
         },
