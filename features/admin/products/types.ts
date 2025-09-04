@@ -18,8 +18,8 @@ export type Product = {
     price: number,
     stock_quantity: number,
     category_id: string,
-    image_url: string
-    image_path?: string
+    image_url: string,
+    image_path?: string,
 }
 
 export type ProductsInfiniteData = {
