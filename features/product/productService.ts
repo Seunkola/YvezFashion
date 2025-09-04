@@ -3,7 +3,7 @@ import { getServerSupabaseClient } from "@/lib/supabase/server";
 import { Product } from "@/features/admin/products/types";
 
 export async function getServerCategoryOptions() {
-  const supabase = getServerSupabaseClient();
+  const supabase = await getServerSupabaseClient();
   const { data, error } = await supabase
     .from("categories")
     .select("id, name")
@@ -14,7 +14,7 @@ export async function getServerCategoryOptions() {
 }
 
 export async function getServerProducts(limit = 12) {
-  const supabase = getServerSupabaseClient();
+  const supabase = await getServerSupabaseClient();
   const { data, error } = await supabase
     .from("products")
     .select("id, name, description, category_id, image_url, price, stock_quantity, created_at")
@@ -26,7 +26,7 @@ export async function getServerProducts(limit = 12) {
 }
 
 export async function getServerProductByID(productID: string) {
-  const supabase = getServerSupabaseClient();
+  const supabase = await getServerSupabaseClient();
   const { data } = await supabase
     .from("products")
     .select("id, name, description, category_id, image_url, price, stock_quantity, created_at")
@@ -37,7 +37,7 @@ export async function getServerProductByID(productID: string) {
 }
 
 export async function getServerProductByIDWithCategory(productID: string) {
-  const supabase = getServerSupabaseClient();
+  const supabase = await getServerSupabaseClient();
   const { data, error } = await supabase
     .from("products")
     .select(`
@@ -53,7 +53,7 @@ export async function getServerProductByIDWithCategory(productID: string) {
 }
 
 export async function getServerRelatedProducts(product: Product) {
-  const supabase = getServerSupabaseClient();
+  const supabase = await getServerSupabaseClient();
   const {data} = await supabase
     .from("products")
     .select("id, name, image_url, price, category_id")

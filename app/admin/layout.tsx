@@ -8,7 +8,7 @@ export default async function AdminDashboadLayout({children}: {children: React.R
     const user = await getServerSession();
     if(!user) redirect ('/login');
 
-    const supabase = createServerSupabase();
+    const supabase = await createServerSupabase();
     const { data: admin } = await supabase
         .from('admin_users')
         .select('id')
