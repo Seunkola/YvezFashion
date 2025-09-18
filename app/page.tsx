@@ -1,10 +1,10 @@
-import Link from 'next/link'
-import ProductCard from '@/components/ui/ProductCard'
-import { getServerProducts } from '@/features/product/productService';
-import { Product } from '@/features/admin/products/types';
+import Link from "next/link";
+import ProductCard from "@/components/ui/ProductCard";
+import { getServerProducts } from "@/features/product/productService";
+import { Product } from "@/features/admin/products/types";
 
 export default async function HomePage() {
-  //Prefetch the first page of products for Featured Product based on latest 
+  //Prefetch the first page of products for Featured Product based on latest
   const initialProducts = await getServerProducts(4);
 
   return (
@@ -21,7 +21,8 @@ export default async function HomePage() {
             Elevate Your Style
           </h1>
           <p className="text-lg md:text-xl mb-6 max-w-xl animate-fade-in-up delay-100">
-            Discover timeless fashion, curated for you. Free shipping over $50.
+            Discover timeless fashion, curated for you. Free shipping within
+            Nigeria for orders over ₦500,000.
           </p>
           <Link
             href="/shop"
@@ -48,5 +49,5 @@ export default async function HomePage() {
         </div>
       </section>
     </main>
-  )
+  );
 }
