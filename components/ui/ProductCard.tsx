@@ -23,7 +23,9 @@ export default function ProductCard({ product }: props) {
         </div>
 
         <div className="p-4">
-          <h3 className="text-lg font-semibold text-black">{product.name}</h3>
+          <h3 className="text-lg font-semibold text-black line-clamp-1">
+            {product.name}
+          </h3>
           <p className="text-sm text-gray-600 mt-1 line-clamp-1">
             {product.description}
           </p>
