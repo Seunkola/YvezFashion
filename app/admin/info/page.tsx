@@ -1,14 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { getBrowserSupabaseClient } from "@/lib/supabase/browser";
-import toast from "react-hot-toast";
 import { useUpdateAdminInfo } from "@/features/admin/useUpdateAdminInfo";
 
 export default function AdminInfoPage() {
   const supabase = getBrowserSupabaseClient();
-  const queryClient = useQueryClient();
 
   const [editing, setEditing] = useState(false);
   const [fullName, setFullName] = useState("");

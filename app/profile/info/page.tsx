@@ -1,3 +1,5 @@
+import ProfileContent from "../profile-server";
+
 export default function ProfileInfoPage() {
-  return <div>Profile Info Page</div>;
+  return <ProfileContent />;
 }

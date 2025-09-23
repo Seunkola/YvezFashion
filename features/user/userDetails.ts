@@ -1,17 +1,16 @@
-import { getServerSupabaseClient } from '@/lib/supabase/server'; 
-import type { Customer } from './customer';
+import { getServerSupabaseClient } from "@/lib/supabase/server";
+import { getBrowserSupabaseClient } from "@/lib/supabase/browser";
 
 export async function getCustomerDetails(user: string) {
-    if(!user) return {customer: null, error: new Error('Not logged in')}
+  if (!user) return { customer: null, error: new Error("Not logged in") };
 
-    const supabase = await getServerSupabaseClient();
+  const supabase = await getServerSupabaseClient();
 
-    const {data: customer, error} = await supabase
-        .from('customers')
-        .select('*')
-        .eq('auth_user_id',user)
-        .single();
+  const { data: customer, error } = await supabase
+    .from("customers")
+    .select("*")
+    .eq("auth_user_id", user)
+    .single();
 
-    return { customer, error}
+  return { customer, error };
 }
-
