@@ -6,15 +6,23 @@ import { Customer } from "@/features/user/customer";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Country, State } from "country-state-city";
+import { useUpdateCustomerInfo } from "@/features/user/useUpdateCustomerInfo";
+import { getCustomerDetails } from "@/features/user/customerDetails";
 
 interface ProfileClientProps {
   customer: Customer | null;
   error: Error | null;
+  userID: string;
 }
 
-export default function ProfileClient({ customer, error }: ProfileClientProps) {
+export default function ProfileClient({
+  customer,
+  error,
+  userID,
+}: ProfileClientProps) {
   const router = useRouter();
 
+  //Define states and functions
   const [editing, setEditing] = useState(false);
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
@@ -26,17 +34,30 @@ export default function ProfileClient({ customer, error }: ProfileClientProps) {
   const [showStateList, setShowStateList] = useState(false);
   const [showCountryList, setShowCountryList] = useState(false);
 
-  const { data: customerDetails, isLoading } = useQuery({
-    queryKey: ["customer-details"],
-    queryFn: () => {
-      return customer;
-    },
-  });
+  //Notify user: User cannot Edit this field
+  const notifyUser = () => {
+    toast.error("You cannot change your email");
+  };
+
+  const { data: customerDetails, isLoading } = useQuery<Customer | null, Error>(
+    {
+      queryKey: ["customer-details"],
+      queryFn: async () => {
+        const result = await getCustomerDetails(userID);
+        // If getCustomerDetails returns { customer, error }, extract only customer
+        return result.customer ?? null;
+      },
+      initialData: customer,
+    }
+  );
 
   if (error) {
     toast.error(`Fetching User details failed: ${error.message}`);
     router.push("/");
   }
+
+  //Update Customer Information
+  const { mutate, isPending } = useUpdateCustomerInfo(setEditing);
 
   if (isLoading) {
     <div className="flex items-center justify-center min-h-[50vh]">
@@ -77,6 +98,7 @@ export default function ProfileClient({ customer, error }: ProfileClientProps) {
           </label>
           <input
             value={editing ? fullName : customerDetails.full_name || ""}
+            placeholder={customerDetails.full_name}
             disabled={!editing}
             onChange={(e) => setFullName(e.target.value)}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white disabled:bg-gray-100"
@@ -87,6 +109,7 @@ export default function ProfileClient({ customer, error }: ProfileClientProps) {
           </label>
           <input
             readOnly
+            onClick={() => notifyUser()}
             value={customerDetails.email}
             disabled={false}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white disabled:bg-gray-100"
@@ -97,6 +120,7 @@ export default function ProfileClient({ customer, error }: ProfileClientProps) {
           </label>
           <input
             value={editing ? phone : customerDetails.phone || ""}
+            placeholder={customerDetails.phone?.toString()}
             disabled={!editing}
             onChange={(e) => setPhone(e.target.value)}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white disabled:bg-gray-100"
@@ -106,7 +130,7 @@ export default function ProfileClient({ customer, error }: ProfileClientProps) {
             Address
           </label>
           <input
-            value={editing ? address : customerDetails.address || ""}
+            value={editing && address ? address : customerDetails.address || ""}
             disabled={!editing}
             onChange={(e) => setAddress(e.target.value)}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white disabled:bg-gray-100"
@@ -118,6 +142,7 @@ export default function ProfileClient({ customer, error }: ProfileClientProps) {
           </label>
           <input
             value={editing ? country : customerDetails.country || ""}
+            placeholder={customerDetails.country || ""}
             disabled={!editing}
             onChange={(e) => {
               setCountry(e.target.value);
@@ -154,6 +179,7 @@ export default function ProfileClient({ customer, error }: ProfileClientProps) {
           </label>
           <input
             value={editing ? city : customerDetails.city || ""}
+            placeholder={customerDetails.city || ""}
             disabled={!editing}
             onChange={(e) => {
               setCity(e.target.value);
@@ -185,16 +211,29 @@ export default function ProfileClient({ customer, error }: ProfileClientProps) {
           </label>
           <input
             value={editing ? postalCode : customerDetails.postal_code || ""}
+            placeholder={customerDetails.postal_code || ""}
             disabled={!editing}
             onChange={(e) => setPostalCode(e.target.value)}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white disabled:bg-gray-100"
           />
 
           <button
-            onClick={() => setEditing(!editing)}
+            onClick={
+              editing
+                ? () =>
+                    mutate({
+                      full_name: fullName,
+                      phone: phone,
+                      address: address,
+                      country: country,
+                      city: city,
+                      postal_code: postalCode,
+                    })
+                : () => setEditing(true)
+            }
             className="mt-4 w-full bg-gold text-black font semi-bold px-4 py-2 rounded-lg hover:bg-yellow-400 transition"
           >
-            {editing ? "Save" : "Edit"}
+            {isPending ? "Saving..." : editing ? "Save" : "Edit"}
           </button>
         </div>
       </div>
