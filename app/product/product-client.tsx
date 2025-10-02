@@ -6,8 +6,8 @@ import { Product } from "@/features/admin/products/types";
 import { useCartStore } from "@/features/cart/store";
 import { useFavouriteStore } from "@/features/favourites/store";
 import { motion } from "framer-motion";
-import Image from "next/image";
 import { useState } from "react";
+import { Minus, Plus } from "lucide-react";
 
 type ProductWithCategory = Product & {
   categories?: { id: string; name: string } | null;
@@ -22,7 +22,12 @@ export default function ProductClient({
     Pick<Product, "id" | "name" | "image_url" | "price" | "category_id">
   > | null;
 }) {
+  const cartItem = useCartStore((store) =>
+    store.items.find((item) => item.id === product.id)
+  );
   const addToCart = useCartStore((store) => store.add);
+  const setCartItemQty = useCartStore((store) => store.setQty);
+  const removeCartItem = useCartStore((store) => store.remove);
   const toggelFav = useFavouriteStore((store) => store.toggle);
   const isFav = useFavouriteStore((store) => store.ids.includes(product.id));
   const [activeImage] = useState(product.image_url);
@@ -78,21 +83,47 @@ export default function ProductClient({
         <p className="text-gray-700 leading-relaxed">{product.description}</p>
 
         <div className="flex gap-3 mt-4 flex-wrap">
-          <Button
-            className="bg-[var(--color-gold)] text-black flex-grow hover:opacity-90"
-            disabled={!inStock}
-            onClick={() =>
-              addToCart({
-                id: product.id,
-                name: product.name,
-                price: Number(product.price ?? 0),
-                image_url: product.image_url ?? "",
-                quantity: 1,
-              })
-            }
-          >
-            {inStock ? "Add to Cart" : "Out of Stock"}
-          </Button>
+          {cartItem ? (
+            <div className="flex items-center border rounded-lg overflow-hidden flex-grow">
+              <Button
+                onClick={() =>
+                  cartItem.quantity > 1
+                    ? setCartItemQty(product.id, cartItem.quantity - 1)
+                    : removeCartItem(product.id)
+                }
+                className="px-3"
+              >
+                <Minus className="w-4 h-4" />
+              </Button>
+
+              <span className="px-4">{cartItem.quantity}</span>
+
+              <Button
+                onClick={() =>
+                  setCartItemQty(product.id, cartItem.quantity + 1)
+                }
+                className="px-3"
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
+          ) : (
+            <Button
+              className={`bg-[var(--color-gold)] text-black flex-grow hover:opacity-90`}
+              disabled={!inStock}
+              onClick={() => {
+                addToCart({
+                  id: product.id,
+                  name: product.name,
+                  price: Number(product.price ?? 0),
+                  image_url: product.image_url ?? "",
+                  quantity: 1,
+                });
+              }}
+            >
+              {inStock ? "Add to Cart" : "Out of Stock"}
+            </Button>
+          )}
 
           <Button
             className={`border ${
@@ -100,7 +131,7 @@ export default function ProductClient({
             } flex-grow`}
             onClick={() => toggelFav(product.id)}
           >
-            {isFav ? "★ Favourited" : "☆ Add to Favourites"}
+            {isFav ? " Favourited" : " Add to Favourites"}
           </Button>
         </div>
 

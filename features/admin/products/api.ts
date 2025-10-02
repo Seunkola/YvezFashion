@@ -2,7 +2,7 @@ import { getBrowserSupabaseClient } from "@/lib/supabase/browser";
 import type { Product, Category, fetchProductsFiltersArgs } from "./types";
 
 const supabase = getBrowserSupabaseClient();
-const BUCKET = 'product-images';
+const BUCKET = "product-images";
 const PAGE_SIZE = 10;
 
 export async function getCategoryOptions(): Promise<Category[]> {
@@ -15,152 +15,181 @@ export async function getCategoryOptions(): Promise<Category[]> {
   return data ?? [];
 }
 
-export async function fetchProducts({pageParam = 0}:{pageParam?: number}): 
-Promise<{products: Product[]; nextPage: number | null}> {
+export async function fetchProducts({
+  pageParam = 0,
+}: {
+  pageParam?: number;
+}): Promise<{ products: Product[]; nextPage: number | null }> {
+  // fetch products with infinite scroll
+  const { data, error, count } = await supabase
+    .from("products")
+    .select(
+      "id,name,description,image_url,price,stock_quantity,created_at,categories(id,name)",
+      { count: "exact" }
+    )
+    .order("created_at", { ascending: false })
+    .range(pageParam * PAGE_SIZE, (pageParam + 1) * PAGE_SIZE - 1);
 
-    // fetch products with infinite scroll
-    const { data , error, count } = await supabase
-        .from('products')
-        .select('id,name,description,image_url,price,stock_quantity,created_at,categories(id,name)',
-        {count: "exact"})
-        .order('created_at', { ascending: false})
-        .range(pageParam * PAGE_SIZE, (pageParam + 1) * PAGE_SIZE - 1);
+  if (error) throw error;
 
-    if(error) throw error;
+  const products =
+    data?.map((product: any) => ({
+      ...product,
+      category: product.category?.name ?? null,
+    })) ?? [];
 
-    const products = data?.map((product: any)=> ({
-            ...product,
-            category:product.category?.name ?? null
-        })) ?? [];
+  // determine if more products still availale to load
+  const hasMoreProducts = count && (pageParam + 1) * PAGE_SIZE < count;
 
-    // determine if more products still availale to load
-    const hasMoreProducts = count && (pageParam + 1) * PAGE_SIZE < count;
-    
-    return {
-        products,
-        nextPage: hasMoreProducts ? pageParam + 1 : null
-    }
+  return {
+    products,
+    nextPage: hasMoreProducts ? pageParam + 1 : null,
+  };
 }
 
-export async function fetchProductsWithFiletering(
-    {pageParam = 0, category, priceRange, limit=PAGE_SIZE}: fetchProductsFiltersArgs) 
-{
-    let query = supabase
-        .from("products")
-        .select("id, name, description, image_url, price")
-        .order("created_at", {ascending: false})
-        .range(pageParam * limit, pageParam * limit + (limit - 1));
-    
-    if (category) {
-        query = query.eq("category_id", category);
-    }
+export async function fetchProductsWithFiletering({
+  pageParam = 0,
+  category,
+  priceRange,
+  limit = PAGE_SIZE,
+}: fetchProductsFiltersArgs) {
+  let query = supabase
+    .from("products")
+    .select("id, name, description, image_url, price, stock_quantity")
+    .order("created_at", { ascending: false })
+    .range(pageParam * limit, pageParam * limit + (limit - 1));
 
-    if (priceRange) {
-        query = query.gte("price", priceRange[0]).lte("price", priceRange[1]);
-    }
+  if (category) {
+    query = query.eq("category_id", category);
+  }
 
-    const { data, error } = await query;
-    if (error) throw error;
+  if (priceRange) {
+    query = query.gte("price", priceRange[0]).lte("price", priceRange[1]);
+  }
 
-    return {
-        products: data as Product[],
-        nextPage: data.length === limit ? pageParam + 1: null,
-    }
-    
+  const { data, error } = await query;
+  if (error) throw error;
+
+  return {
+    products: data as Product[],
+    nextPage: data.length === limit ? pageParam + 1 : null,
+  };
 }
 
-export async function uploadProductImage(file:File) {
-    const ext = file.name.split('.').pop();
-    const path = `admin/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { data, error } = await supabase.storage.from(BUCKET).upload(path, file, {
-        contentType: 'image/*',
-        cacheControl: '3600',
-        upsert: false
+export async function uploadProductImage(file: File) {
+  const ext = file.name.split(".").pop();
+  const path = `admin/${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2)}.${ext}`;
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .upload(path, file, {
+      contentType: "image/*",
+      cacheControl: "3600",
+      upsert: false,
     });
-    if(error) {throw error.message};
-    const {data: publicData} = supabase.storage.from(BUCKET).getPublicUrl(data.path);
-    return {
-        publicUrl: publicData.publicUrl,
-        path
-    }
+  if (error) {
+    throw error.message;
+  }
+  const { data: publicData } = supabase.storage
+    .from(BUCKET)
+    .getPublicUrl(data.path);
+  return {
+    publicUrl: publicData.publicUrl,
+    path,
+  };
 }
 
-export async function createProduct(input:Product, image_file?: File | null): Promise<Product> {
-    let image_url: string  | null = 'https://via.placeholder.com/400'; // default;
-    let image_path: string | null = null;
+export async function createProduct(
+  input: Product,
+  image_file?: File | null
+): Promise<Product> {
+  let image_url: string | null = "https://via.placeholder.com/400"; // default;
+  let image_path: string | null = null;
 
-    if(image_file && image_file.size){
-        const uploadImage = await uploadProductImage(image_file);
-        image_url = uploadImage.publicUrl;
-        image_path = uploadImage.path;
-    }
+  if (image_file && image_file.size) {
+    const uploadImage = await uploadProductImage(image_file);
+    image_url = uploadImage.publicUrl;
+    image_path = uploadImage.path;
+  }
 
-    const { data, error } = await supabase
-        .from('products')
-        .insert({
-            name: input.name,
-            description: input.description,
-            price: input.price,
-            stock_quantity: input.stock_quantity,
-            category_id: input.category_id,
-            image_url,
-            image_path
-        })
-        .select('id,name,description,price,stock_quantity,category_id,image_url,image_path,created_at')
-        .single();
-    if(error) throw error;
-    return data
+  const { data, error } = await supabase
+    .from("products")
+    .insert({
+      name: input.name,
+      description: input.description,
+      price: input.price,
+      stock_quantity: input.stock_quantity,
+      category_id: input.category_id,
+      image_url,
+      image_path,
+    })
+    .select(
+      "id,name,description,price,stock_quantity,category_id,image_url,image_path,created_at"
+    )
+    .single();
+  if (error) throw error;
+  return data;
 }
 
-export async function updateProduct(id:string, patch:Partial<Product>, image_file?: File | null ): Promise<Product> {
-    const updates = {...patch}
+export async function updateProduct(
+  id: string,
+  patch: Partial<Product>,
+  image_file?: File | null
+): Promise<Product> {
+  const updates = { ...patch };
 
-    if(image_file && image_file.size) {
-        const uploadImage = await uploadProductImage(image_file);
-        updates.image_url = uploadImage.publicUrl;
-        updates.image_path = uploadImage.path;
-    }
-    
-    const { data, error } = await supabase
-        .from('products')
-        .update(updates)
-        .eq("id", id)
-        .select('id,name,description,price,stock_quantity,category_id,image_url,image_path,created_at')
-        .single();
-    
-    if(error) throw error
+  if (image_file && image_file.size) {
+    const uploadImage = await uploadProductImage(image_file);
+    updates.image_url = uploadImage.publicUrl;
+    updates.image_path = uploadImage.path;
+  }
 
-    return data
+  const { data, error } = await supabase
+    .from("products")
+    .update(updates)
+    .eq("id", id)
+    .select(
+      "id,name,description,price,stock_quantity,category_id,image_url,image_path,created_at"
+    )
+    .single();
+
+  if (error) throw error;
+
+  return data;
 }
 
-export async function deleteProduct(id:string) {
-    //Get image path stored in the database
-    const { data: product, error: fetchError } = await supabase
-        .from("products")
-        .select("image_path")
-        .eq("id", id)
-        .single();
+export async function deleteProduct(id: string) {
+  //Get image path stored in the database
+  const { data: product, error: fetchError } = await supabase
+    .from("products")
+    .select("image_path")
+    .eq("id", id)
+    .single();
 
-    if (fetchError) throw new Error(fetchError.message);
+  if (fetchError) throw new Error(fetchError.message);
 
-    // delete product from database based on id
-    const { error: deleteError } = await supabase
-        .from('products')
-        .delete()
-        .eq("id", id);
-    
-    if(deleteError) throw new Error(deleteError.message);
+  // delete product from database based on id
+  const { error: deleteError } = await supabase
+    .from("products")
+    .delete()
+    .eq("id", id);
 
-    //delete image if exist in the bucket
-    if(product?.image_path) {
-        const { error: storageDeleteError } = await supabase.storage
-            .from(BUCKET)
-            .remove([product.image_path]);
+  if (deleteError) throw new Error(deleteError.message);
 
-        if(storageDeleteError){
-            console.warn("Product deleted but failed to delete image:", storageDeleteError.message);
-        }
+  //delete image if exist in the bucket
+  if (product?.image_path) {
+    const { error: storageDeleteError } = await supabase.storage
+      .from(BUCKET)
+      .remove([product.image_path]);
+
+    if (storageDeleteError) {
+      console.warn(
+        "Product deleted but failed to delete image:",
+        storageDeleteError.message
+      );
     }
+  }
 }
 
 /*export async function getServerCategoryOptions() {

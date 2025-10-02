@@ -1,4 +1,4 @@
-// Cart Types 
+// Cart Types
 type CartItem = {
   id: string;
   name: string;
@@ -9,6 +9,7 @@ type CartItem = {
 
 type CartState = {
   items: CartItem[];
+  totalAmount: number;
   add: (item: CartItem) => void;
   remove: (id: string) => void;
   clear: () => void;
