@@ -30,7 +30,7 @@ export default function Cart() {
         {cartItems.map((cartItem) => (
           <div
             key={cartItem.id}
-            className="flex items-center gap-4 bg-white p-4 rounded-xl shadow-sm border"
+            className="sm:w-auto block sm:flex items-center gap-4 bg-white p-4 rounded-xl shadow-sm border"
           >
             <img
               src={cartItem.image_url}
@@ -65,7 +65,7 @@ export default function Cart() {
             </div>
 
             {/* Cart Item total price*/}
-            <div className="flex flex-col items-start sm:items-end w-full sm:w-auto order-2 sm:order-none mt-3 sm:mt-0">
+            <div className="w-full sm:w-auto block sm:flex sm:flex-col sm:items-end mt-3 sm:mt-0 order-2 sm:order-none">
               <p className="font-semibold text-gray-900">
                 ₦{(cartItem.price * cartItem.quantity).toLocaleString()}
               </p>

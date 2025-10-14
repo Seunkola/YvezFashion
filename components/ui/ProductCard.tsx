@@ -18,7 +18,6 @@ export default function ProductCard({ product }: props) {
   const setCartItemQty = useCartStore((store) => store.setQty);
   const removeCartItem = useCartStore((store) => store.remove);
   const inStock = (product.stock_quantity ?? 0) > 0;
-  console.log(product.stock_quantity);
 
   return (
     <div className="border rounded-md shadow-sm hover:shadow-md transition overflow-hidden bg-white">
