@@ -45,8 +45,6 @@ export default function SignupPage() {
 
     setLoading(false);
 
-    //const { error } = await signUp(email, password)
-
     if (error) {
       setError(error.message);
       return;

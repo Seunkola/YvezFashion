@@ -3,12 +3,56 @@
 import { Button } from "@/components/ui/Button";
 import { Minus, Plus, Trash } from "lucide-react";
 import { useCartStore } from "@/features/cart/store";
+import { saveCartItems } from "@/features/checkout/api";
+import { getBrowserSupabaseClient } from "@/lib/supabase/browser";
+import toast from "react-hot-toast";
+import { redirect } from "next/navigation";
 
 export default function Cart() {
   const cartItems = useCartStore((store) => store.items);
   const totalItems = cartItems.length;
   const totalAmount = useCartStore((store) => store.totalAmount);
   const { setQty, remove, clear } = useCartStore();
+
+  //store cartItems in Database in background asynchronously
+  const storedCartItems = async () => {
+    try {
+      const user = await getBrowserSupabaseClient()
+        .auth.getUser()
+        .then((res) => res.data.user);
+
+      // Check if user is authenticated
+      if (!user) return;
+
+      // check if there are cart items to store
+      if (cartItems.length === 0) return;
+
+      // Prepare cart items for storage on the database
+      const dbCartItems = cartItems.map((item) => ({
+        id: item.id,
+        product_id: item.id,
+        quantity: item.quantity,
+        price: item.price,
+      }));
+
+      const response = await saveCartItems({
+        cartItems: dbCartItems,
+        userId: user.id,
+      });
+      return response;
+    } catch (error) {
+      console.error("Failed to store cart items:", error);
+    }
+  };
+
+  const checkOutCart = () => {
+    toast.success("Proceeding to checkout...");
+    // Store cart items in the background
+    storedCartItems();
+
+    // Redirect to checkout page
+    redirect("/checkout");
+  };
 
   if (totalItems === 0) {
     return (
@@ -101,7 +145,10 @@ export default function Cart() {
         </div>
 
         {/* Check out buttons */}
-        <Button className="w-full bg-[var(--color-gold)] text-black hover:opacity-90">
+        <Button
+          onClick={checkOutCart}
+          className="w-full bg-[var(--color-gold)] text-black hover:opacity-90"
+        >
           Proceed to Checkout
         </Button>
 
