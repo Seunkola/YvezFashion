@@ -62,7 +62,7 @@ export function useUpdateCustomerInfo(setEditing: (v: boolean) => void) {
       toast.error("Error updating Customer details: " + error);
     },
     onSuccess: () => {
-      toast.success("Profile updated ✅");
+      //toast.success("Profile updated");
       setEditing(false);
     },
     onSettled: () => {

@@ -1,5 +1,4 @@
 import { getServerSupabaseClient } from "@/lib/supabase/server";
-import { getBrowserSupabaseClient } from "@/lib/supabase/browser";
 
 export async function getCustomerDetails(user: string) {
   if (!user) return { customer: null, error: new Error("Not logged in") };

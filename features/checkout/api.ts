@@ -2,7 +2,6 @@ import { getBrowserSupabaseClient } from "@/lib/supabase/browser";
 import type { CartItem, Cart } from "./cartItems.type";
 import { on } from "events";
 
-const supabase = getBrowserSupabaseClient();
 const PAGE_SIZE = 10;
 
 export async function fetchCartItems({
@@ -16,6 +15,8 @@ export async function fetchCartItems({
   if (!customerId) {
     return { cartItems: [], nextPage: null };
   }
+
+  const supabase = getBrowserSupabaseClient();
 
   // check if cart exists for the user
   const { data: cartData, error: cartError } = await supabase
@@ -67,6 +68,8 @@ export async function saveCartItems({
   if (!userId) {
     throw new Error("User ID is required to save cart items.");
   }
+
+  const supabase = getBrowserSupabaseClient();
 
   // get customer id for the user
   const customer = await supabase
@@ -123,6 +126,7 @@ export async function saveCartItems({
 }
 
 export async function deleteCartItem(cartId: string) {
+  const supabase = getBrowserSupabaseClient();
   const { error } = await supabase.from("cart_items").delete().eq("id", cartId);
 
   if (error) {
